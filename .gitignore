@@ -1,3 +1,5 @@
 .vscode
 log_file.log
 comicbot-env/
+pytorch_model.bin
+spiece.model
