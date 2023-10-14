@@ -5,7 +5,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained("./model")
 tokenizer = AutoTokenizer.from_pretrained("./model")
 
 # Prepare the text you want to use as a prompt
-text = "Using Bill Burr's style of humor, craft a joke about the absurdity of people being glued to their smartphones at social events. Make sure to include a setup and a punchline. The setup should introduce the situation, and the punchline should deliver the unexpected twist or humorous observation. Please format it as follows: 'Setup: [Insert your setup here]. Punchline: [Insert your punchline here]."
+text = "So, I went on a date last night and you won't believe what happened..."
 
 
 # Encode the text and run it through the model

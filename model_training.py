@@ -14,11 +14,16 @@ def main():
     datasets = load_dataset(
         'csv', data_files={'train': 'train_no_punc.csv', 'test': 'test_no_punc.csv'})
 
-    def tokenize_function(examples):
-        return tokenizer(examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False)
-
-    train_dataset = datasets['train'].map(tokenize_function, batched=True)
-    test_dataset = datasets['test'].map(tokenize_function, batched=True)
+    train_dataset = datasets['train'].map(
+        lambda examples: tokenizer(
+            examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False),
+        batched=True
+    )
+    test_dataset = datasets['test'].map(
+        lambda examples: tokenizer(
+            examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False),
+        batched=True
+    )
 
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=False)
@@ -32,10 +37,10 @@ def main():
         save_steps=2_000,
         save_total_limit=2,
         logging_dir='./logs',
-        learning_rate=5e-5,  # Added
-        weight_decay=0.01,  # Added
-        evaluation_strategy="steps",  # Added
-        eval_steps=500,  # Added if evaluation_strategy is "steps"
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        evaluation_strategy="steps",
+        eval_steps=500,
         warmup_steps=300
     )
 
@@ -49,8 +54,6 @@ def main():
 
     # Training
     trainer.train()
-
-    # Evaluation
     trainer.evaluate()
 
     # Saving the trained model
