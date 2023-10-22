@@ -5,7 +5,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained("./model")
 tokenizer = AutoTokenizer.from_pretrained("./model")
 
 # Prepare the text you want to use as a prompt
-text = "So, I went on a date last night and you won't believe what happened..."
+text = "whos your favorite comedian???"
 
 
 # Encode the text and run it through the model

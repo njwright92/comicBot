@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import string
 
 # Function to tokenize text into sentences
 
@@ -10,7 +9,7 @@ def tokenize_sentences(text):
 
 
 # Step 1: Load the data
-data = pd.read_csv('comedy-transcripts-with-sentences.csv')
+data = pd.read_csv('comedy-dad-jokes-combined.csv')
 
 # Print first 5 rows to understand the data
 print(data.head())
@@ -18,15 +17,8 @@ print(data.head())
 # Checking for missing values
 print(data.isnull().sum())
 
-# Step 2: Text Cleaning (optional, based on your needs)
-# Converting text to lowercase
-# Removing punctuation
-data['transcript'] = data['transcript'].str.lower()
-data['transcript'] = data['transcript'].str.replace(
-    '[{}]'.format(string.punctuation), '')
-
-# Tokenize the transcripts into sentences
-data['sentences'] = data['transcript'].apply(tokenize_sentences)
+# Tokenize the setup into sentences
+data['setup_sentences'] = data['setup'].apply(tokenize_sentences)
 
 # Step 3: Splitting the data
 train, test = train_test_split(data, test_size=0.2, random_state=42)
