@@ -4,3 +4,5 @@ comicbot-env/
 pytorch_model.bin
 spiece.model
 .DS_Store
+transcripts/
+audio_files/

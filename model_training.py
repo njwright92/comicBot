@@ -12,7 +12,7 @@ def main():
     tokenizer.pad_token = tokenizer.eos_token  # Set a padding token
 
     datasets = load_dataset(
-        'csv', data_files={'train': 'train_no_punc_cleaned.csv', 'test': 'test_no_punc.csv'})
+        'csv', data_files={'train': 'train.csv', 'test': 'test.csv'})
 
     train_dataset = datasets['train'].map(
         lambda examples: tokenizer(

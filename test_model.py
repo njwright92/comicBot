@@ -2,10 +2,11 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 # Load the trained model and tokenizer
 model = AutoModelForSeq2SeqLM.from_pretrained("./model")
-tokenizer = AutoTokenizer.from_pretrained("./model")
+tokenizer = AutoTokenizer.from_pretrained("./model", model_max_length=512)
+
 
 # Prepare the text you want to use as a prompt
-text = "whos your favorite comedian???"
+text = "what letter comes after y in the alphabet?"
 
 
 # Encode the text and run it through the model
