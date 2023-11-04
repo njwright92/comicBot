@@ -58,14 +58,34 @@ def process_video(video_id):
         outfile.write(transcript)
 
 
+def download_audio_from_playlist(playlist_url):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'outtmpl': f'{audio_folder}/%(id)s.%(ext)s',
+        'ignoreerrors': True,  # Continue on download errors
+        'extract_flat': True,  # Just get video IDs from the playlist
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(playlist_url, download=False)
+        for video in info_dict['entries']:
+            if video:  # Video is not None or deleted
+                process_video(video['id'])
+
+
 def download_transcripts_from_csv(file_path):
     with open(file_path, 'r') as csvfile:
         reader = csv.reader(csvfile)
         for row in tqdm(reader):
             url = row[0]
             if "list=" in url:
-                # It's a playlist, but we'll skip for simplicity
-                print("Playlist detected. Skipping for now.")
+                # It's a playlist, process each video in the playlist
+                download_audio_from_playlist(url)
             else:
                 # It's a single video
                 video_id = url.split('v=')[-1]

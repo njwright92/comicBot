@@ -6,7 +6,7 @@ tokenizer = AutoTokenizer.from_pretrained("./model", model_max_length=512)
 
 
 # Prepare the text you want to use as a prompt
-text = "what letter comes after y in the alphabet?"
+text = "premise: woman are emotional creatures. outcome: why do woman get upset easily?"
 
 
 # Encode the text and run it through the model

@@ -1,8 +1,18 @@
 import os
 from transformers import DataCollatorForLanguageModeling, Trainer, TrainingArguments, AutoTokenizer, AutoModelForSeq2SeqLM
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
+
+
+def load_transcripts(directory):
+    transcript_texts = []
+    for filename in os.listdir(directory):
+        if filename.endswith('.txt'):
+            file_path = os.path.join(directory, filename)
+            with open(file_path, 'r', encoding='utf-8') as file:
+                transcript_texts.append(file.read())
+    return transcript_texts
 
 
 def main():
@@ -12,18 +22,19 @@ def main():
     tokenizer.pad_token = tokenizer.eos_token  # Set a padding token
 
     datasets = load_dataset(
-        'csv', data_files={'train': 'train.csv', 'test': 'test.csv'})
+        'csv', data_files={'test': 'test.csv'})
 
-    train_dataset = datasets['train'].map(
-        lambda examples: tokenizer(
-            examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False),
-        batched=True
-    )
     test_dataset = datasets['test'].map(
         lambda examples: tokenizer(
             examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False),
         batched=True
     )
+
+    transcripts = load_transcripts('transcripts')
+    train_encodings = tokenizer(transcripts, truncation=True,
+                                padding='max_length', max_length=tokenizer.model_max_length)
+    train_dataset = Dataset.from_dict(
+        {"input_ids": train_encodings["input_ids"], "attention_mask": train_encodings["attention_mask"]})
 
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=False)
