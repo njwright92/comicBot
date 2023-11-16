@@ -6,12 +6,12 @@ tokenizer = AutoTokenizer.from_pretrained("./model", model_max_length=512)
 
 
 # Prepare the text you want to use as a prompt
-text = "premise: woman are emotional creatures. outcome: why do woman get upset easily?"
+text = "Why don't scientists trust atoms?"
 
 
 # Encode the text and run it through the model
 input_ids = tokenizer(text, return_tensors="pt").input_ids
-outputs = model.generate(input_ids, max_length=500,
+outputs = model.generate(input_ids, max_length=3000,
                          num_return_sequences=1)
 
 # Decode and print the output text

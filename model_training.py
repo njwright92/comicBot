@@ -13,12 +13,12 @@ def load_transcripts(file_path):
 
 
 def main():
-    tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
-    model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
+    tokenizer = AutoTokenizer.from_pretrained("./model")
+    model = AutoModelForSeq2SeqLM.from_pretrained("./model")
 
     # Load training and testing data
-    train_transcripts = load_transcripts('train.txt')
-    test_transcripts = load_transcripts('test.txt')
+    train_transcripts = load_transcripts('train2.txt')
+    test_transcripts = load_transcripts('test2.txt')
 
     # Tokenize the data
     train_encodings = tokenizer(train_transcripts, truncation=True,
@@ -38,7 +38,7 @@ def main():
     training_args = TrainingArguments(
         output_dir="./model",
         overwrite_output_dir=True,
-        num_train_epochs=3,
+        num_train_epochs=4,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         save_steps=2_000,
