@@ -67,14 +67,14 @@ def download_audio_from_playlist(playlist_url):
             'preferredquality': '192',
         }],
         'outtmpl': f'{audio_folder}/%(id)s.%(ext)s',
-        'ignoreerrors': True,  # Continue on download errors
-        'extract_flat': True,  # Just get video IDs from the playlist
+        'ignoreerrors': True,
+        'extract_flat': True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(playlist_url, download=False)
         for video in info_dict['entries']:
-            if video:  # Video is not None or deleted
+            if video:
                 process_video(video['id'])
 
 

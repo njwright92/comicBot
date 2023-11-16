@@ -1,40 +1,36 @@
 import os
 from transformers import DataCollatorForLanguageModeling, Trainer, TrainingArguments, AutoTokenizer, AutoModelForSeq2SeqLM
-from datasets import load_dataset, Dataset
+from datasets import Dataset
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 
 
-def load_transcripts(directory):
-    transcript_texts = []
-    for filename in os.listdir(directory):
-        if filename.endswith('.txt'):
-            file_path = os.path.join(directory, filename)
-            with open(file_path, 'r', encoding='utf-8') as file:
-                transcript_texts.append(file.read())
-    return transcript_texts
+def load_transcripts(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        # Assuming transcripts are separated by two new lines
+        transcripts = file.read().split('\n')
+    return transcripts
 
 
 def main():
     tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
     model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
 
-    tokenizer.pad_token = tokenizer.eos_token  # Set a padding token
+    # Load training and testing data
+    train_transcripts = load_transcripts('train.txt')
+    test_transcripts = load_transcripts('test.txt')
 
-    datasets = load_dataset(
-        'csv', data_files={'test': 'test.csv'})
-
-    test_dataset = datasets['test'].map(
-        lambda examples: tokenizer(
-            examples['transcript'], truncation=True, padding='max_length', return_attention_mask=False),
-        batched=True
-    )
-
-    transcripts = load_transcripts('transcripts')
-    train_encodings = tokenizer(transcripts, truncation=True,
+    # Tokenize the data
+    train_encodings = tokenizer(train_transcripts, truncation=True,
                                 padding='max_length', max_length=tokenizer.model_max_length)
+    test_encodings = tokenizer(test_transcripts, truncation=True,
+                               padding='max_length', max_length=tokenizer.model_max_length)
+
+    # Create datasets
     train_dataset = Dataset.from_dict(
         {"input_ids": train_encodings["input_ids"], "attention_mask": train_encodings["attention_mask"]})
+    test_dataset = Dataset.from_dict(
+        {"input_ids": test_encodings["input_ids"], "attention_mask": test_encodings["attention_mask"]})
 
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=False)
