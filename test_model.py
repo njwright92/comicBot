@@ -6,7 +6,7 @@ tokenizer = AutoTokenizer.from_pretrained("./model", model_max_length=512)
 
 
 # Prepare the text you want to use as a prompt
-text = "Why don't scientists trust atoms?"
+text = "whos your favorite comedian?"
 
 
 # Encode the text and run it through the model

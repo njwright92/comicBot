@@ -5,20 +5,33 @@ from datasets import Dataset
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 
 
-def load_transcripts(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        # Assuming transcripts are separated by two new lines
-        transcripts = file.read().split('\n')
+def load_transcripts(*file_paths):
+    """
+    Load and concatenate text from multiple files.
+
+    Parameters:
+    *file_paths (str): Variable number of file paths.
+
+    Returns:
+    list: List of transcripts.
+    """
+    transcripts = []
+    for file_path in file_paths:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            transcripts += file.read().split('\n')
     return transcripts
 
 
 def main():
-    tokenizer = AutoTokenizer.from_pretrained("./model")
-    model = AutoModelForSeq2SeqLM.from_pretrained("./model")
+    tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
+    model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
 
-    # Load training and testing data
-    train_transcripts = load_transcripts('train2.txt')
-    test_transcripts = load_transcripts('test2.txt')
+    # Load and concatenate multiple training data files
+    train_transcripts = load_transcripts(
+        'train.txt', 'train2.txt', 'train3.txt')
+
+    # Load and concatenate multiple testing data files
+    test_transcripts = load_transcripts('test.txt', 'test2.txt', 'test3.txt')
 
     # Tokenize the data
     train_encodings = tokenizer(train_transcripts, truncation=True,
@@ -59,7 +72,7 @@ def main():
         eval_dataset=test_dataset,
     )
 
-    # Training
+    # Training and evaluation
     trainer.train()
     trainer.evaluate()
 

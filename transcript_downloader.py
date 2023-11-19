@@ -5,13 +5,17 @@ import yt_dlp
 import whisper
 from tqdm import tqdm
 import ssl
+import threading
+from queue import Queue
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
-
 # Folder to save audio and transcripts
 audio_folder = 'audio_files'
-transcripts_folder = 'transcripts'
+transcripts_folder = 'transcripts2'
+
+# Queue for processing videos
+video_queue = Queue()
 
 
 def sanitize_filename(filename):
@@ -24,18 +28,12 @@ def sanitize_filename(filename):
     return s
 
 
-def download_audio_with_yt_dlp(video_id):
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3'
-        }],
-        'outtmpl': f'{audio_folder}/{video_id}.%(ext)s'
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+def download_audio_with_yt_dlp(video_id, ydl):
+    audio_file_path = f'{audio_folder}/{video_id}.mp3'
+    if not os.path.exists(audio_file_path):
         ydl.download([f'https://www.youtube.com/watch?v={video_id}'])
+    else:
+        print(f"Audio file for {video_id} already exists, skipping download.")
 
 
 def transcribe_audio_with_whisper(audio_file):
@@ -44,21 +42,40 @@ def transcribe_audio_with_whisper(audio_file):
     return result["text"]
 
 
-def process_video(video_id):
+def process_video(video_id, ydl):
     audio_file = f"{audio_folder}/{video_id}.mp3"
-
-    # Download audio
-    download_audio_with_yt_dlp(video_id)
-
-    # Transcribe audio
+    download_audio_with_yt_dlp(video_id, ydl)
     transcript = transcribe_audio_with_whisper(audio_file)
-
-    # Save the transcript
     with open(f"{transcripts_folder}/{video_id}.txt", 'w', encoding="utf-8") as outfile:
         outfile.write(transcript)
 
 
-def download_audio_from_playlist(playlist_url):
+def worker(ydl):
+    while True:
+        video_id = video_queue.get()
+        process_video(video_id, ydl)
+        video_queue.task_done()
+
+
+def download_transcripts_from_csv(file_path, ydl):
+    with open(file_path, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in tqdm(reader):
+            url = row[0]
+            if "list=" in url:
+                info_dict = ydl.extract_info(url, download=False)
+                for video in info_dict['entries']:
+                    if video:
+                        video_queue.put(video['id'])
+            else:
+                video_id = url.split('v=')[-1]
+                video_queue.put(video_id)
+
+
+if __name__ == "__main__":
+    os.makedirs(audio_folder, exist_ok=True)
+    os.makedirs(transcripts_folder, exist_ok=True)
+
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -71,31 +88,15 @@ def download_audio_from_playlist(playlist_url):
         'extract_flat': True,
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(playlist_url, download=False)
-        for video in info_dict['entries']:
-            if video:
-                process_video(video['id'])
+    ydl = yt_dlp.YoutubeDL(ydl_opts)
 
-
-def download_transcripts_from_csv(file_path):
-    with open(file_path, 'r') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in tqdm(reader):
-            url = row[0]
-            if "list=" in url:
-                # It's a playlist, process each video in the playlist
-                download_audio_from_playlist(url)
-            else:
-                # It's a single video
-                video_id = url.split('v=')[-1]
-                process_video(video_id)
-
-
-if __name__ == "__main__":
-    # Ensure folders exist
-    os.makedirs(audio_folder, exist_ok=True)
-    os.makedirs(transcripts_folder, exist_ok=True)
+    # Create and start worker threads
+    for i in range(4):  # Adjust the number of threads as needed
+        t = threading.Thread(target=worker, args=(ydl,))
+        t.daemon = True
+        t.start()
 
     csv_path = 'urls.csv'
-    download_transcripts_from_csv(csv_path)
+    download_transcripts_from_csv(csv_path, ydl)
+
+    video_queue.join()

@@ -5,4 +5,14 @@ pytorch_model.bin
 spiece.model
 .DS_Store
 transcripts/
+transcripts2/
 audio_files/
+redditjokes.txt
+test2.txt
+test.txt
+test3.txt
+train3.txt
+train2.txt
+train.txt
+yt-transcripts.txt
+logs/events.out.tfevents.1700421107.Nathans-Air.lan.18181.0
