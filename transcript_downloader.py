@@ -37,7 +37,7 @@ def download_audio_with_yt_dlp(video_id, ydl):
 
 
 def transcribe_audio_with_whisper(audio_file):
-    model = whisper.load_model("base")
+    model = whisper.load_model("large")
     result = model.transcribe(audio_file)
     return result["text"]
 
