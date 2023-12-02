@@ -1,10 +1,9 @@
 .vscode
 log_file.log
-comicbot-env/
+venv/
 pytorch_model.bin
 spiece.model
 .DS_Store
-transcripts/
 transcripts2/
 audio_files/
 redditjokes.txt
