@@ -37,17 +37,22 @@ def download_audio_with_yt_dlp(video_id, ydl):
 
 
 def transcribe_audio_with_whisper(audio_file):
-    model = whisper.load_model("base")
+    model = whisper.load_model("large")
     result = model.transcribe(audio_file)
     return result["text"]
 
 
 def process_video(video_id, ydl):
-    audio_file = f"{audio_folder}/{video_id}.mp3"
-    download_audio_with_yt_dlp(video_id, ydl)
-    transcript = transcribe_audio_with_whisper(audio_file)
-    with open(f"{transcripts_folder}/{video_id}.txt", 'w', encoding="utf-8") as outfile:
-        outfile.write(transcript)
+    transcript_file = f"{transcripts_folder}/{video_id}.txt"
+    # Check if transcript file already exists
+    if not os.path.exists(transcript_file):
+        audio_file = f"{audio_folder}/{video_id}.mp3"
+        download_audio_with_yt_dlp(video_id, ydl)
+        transcript = transcribe_audio_with_whisper(audio_file)
+        with open(transcript_file, 'w', encoding="utf-8") as outfile:
+            outfile.write(transcript)
+    else:
+        print(f"Transcript for {video_id} already exists, skipping.")
 
 
 def worker(ydl):
