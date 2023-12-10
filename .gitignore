@@ -1,5 +1,6 @@
 .vscode
 log_file.log
+logs/
 comicbot-env/
 pytorch_model.bin
 spiece.model
@@ -17,3 +18,5 @@ train.txt
 yt-transcripts.txt
 logs/events.out.tfevents.1700421107.Nathans-Air.lan.18181.0
 mistral-comedy-2.0-ckpt-600.Q6_K.gguf
+mistral-comedy-3.0-ckpt-1600.Q6_K.gguf
+combined_comedy_transcripts.txt

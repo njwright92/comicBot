@@ -7,7 +7,7 @@ while True:
     prompt = input('PROMPT: ')
     output = model(
         prompt,
-        max_tokens=500,
+        max_tokens=300,
         echo=False,
         stream=True,
     )
