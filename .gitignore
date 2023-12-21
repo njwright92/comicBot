@@ -20,3 +20,4 @@ logs/events.out.tfevents.1700421107.Nathans-Air.lan.18181.0
 mistral-comedy-2.0-ckpt-600.Q6_K.gguf
 mistral-comedy-3.0-ckpt-1600.Q6_K.gguf
 combined_comedy_transcripts.txt
+comedy_transcripts1.json

@@ -1,6 +1,7 @@
 import csv
 import re
 import os
+import json
 import yt_dlp
 import whisper
 from tqdm import tqdm
@@ -28,37 +29,56 @@ def sanitize_filename(filename):
     return s
 
 
-def download_audio_with_yt_dlp(video_id, ydl):
+def download_audio_and_get_title(video_id, ydl):
     audio_file_path = f'{audio_folder}/{video_id}.mp3'
-    if not os.path.exists(audio_file_path):
+    title = None
+    info_dict = ydl.extract_info(
+        f'https://www.youtube.com/watch?v={video_id}', download=False)
+    title = sanitize_filename(info_dict.get('title', video_id))
+
+    transcript_file = f"{transcripts_folder}/{title}.txt"
+    # Check if either the audio file or the transcript file already exists
+    if not os.path.exists(audio_file_path) and not os.path.exists(transcript_file):
         ydl.download([f'https://www.youtube.com/watch?v={video_id}'])
     else:
-        print(f"Audio file for {video_id} already exists, skipping download.")
+        print(f"Skipping {video_id} as audio or transcript already exists.")
+        title = None  # Set title to None to indicate skipping
+
+    return title
 
 
 def transcribe_audio_with_whisper(audio_file):
-    model = whisper.load_model("medium")
+    model = whisper.load_model("small")
     result = model.transcribe(audio_file)
     return result["text"]
 
 
-def process_video(video_id, ydl):
-    transcript_file = f"{transcripts_folder}/{video_id}.txt"
-    # Check if transcript file already exists
-    if not os.path.exists(transcript_file):
+def process_video(video_id, video_url, ydl):
+    title = download_audio_and_get_title(video_id, ydl)
+    if title:
+        # Change the extension to .json
+        transcript_file = f"{transcripts_folder}/{title}.json"
         audio_file = f"{audio_folder}/{video_id}.mp3"
-        download_audio_with_yt_dlp(video_id, ydl)
-        transcript = transcribe_audio_with_whisper(audio_file)
+        transcript_text = transcribe_audio_with_whisper(audio_file)
+
+        # Include the video URL in the transcript data
+        transcript_data = {
+            "url": video_url,
+            "title": title,
+            "transcript": transcript_text
+        }
+
         with open(transcript_file, 'w', encoding="utf-8") as outfile:
-            outfile.write(transcript)
+            json.dump(transcript_data, outfile, ensure_ascii=False,
+                      indent=4)  # Write as formatted JSON
     else:
-        print(f"Transcript for {video_id} already exists, skipping.")
+        print(f"Skipped processing for {video_id}.")
 
 
 def worker(ydl):
     while True:
-        video_id = video_queue.get()
-        process_video(video_id, ydl)
+        video_id, video_url = video_queue.get()
+        process_video(video_id, video_url, ydl)
         video_queue.task_done()
 
 
@@ -68,13 +88,20 @@ def download_transcripts_from_csv(file_path, ydl):
         for row in tqdm(reader):
             url = row[0]
             if "list=" in url:
-                info_dict = ydl.extract_info(url, download=False)
-                for video in info_dict['entries']:
-                    if video:
-                        video_queue.put(video['id'])
+                try:
+                    info_dict = ydl.extract_info(url, download=False)
+                    if 'entries' in info_dict:
+                        for video in info_dict['entries']:
+                            if video:
+                                video_url = video.get('webpage_url')
+                                video_queue.put((video['id'], video_url))
+                    else:
+                        print(f"No entries found for playlist: {url}")
+                except Exception as e:
+                    print(f"Error extracting playlist information: {e}")
             else:
                 video_id = url.split('v=')[-1]
-                video_queue.put(video_id)
+                video_queue.put((video_id, url))
 
 
 if __name__ == "__main__":
@@ -96,7 +123,7 @@ if __name__ == "__main__":
     ydl = yt_dlp.YoutubeDL(ydl_opts)
 
     # Create and start worker threads
-    for i in range(4):  # Adjust the number of threads as needed
+    for i in range(4):
         t = threading.Thread(target=worker, args=(ydl,))
         t.daemon = True
         t.start()
