@@ -1,4 +1,6 @@
-importlib-metadata
-yt-dlp
-whisper
-tqdm
+importlib-metadata  # Specifying a range for compatibility
+yt-dlp  # Use the latest version unless you have a specific version requirement
+whisper  # Assuming this refers to OpenAI's Whisper model, its dependencies are handled separately
+tqdm  # Progress bar library, typically no strict version requirement
+googletrans # A recent version that's compatible with Python 3.6+
+huggingface-hub
